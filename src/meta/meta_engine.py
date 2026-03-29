@@ -9,10 +9,17 @@ def process_explanation(
     topic,
     explanation_type,
     prev_correctness,
-    current_correctness
+    current_correctness,
+    student_answer=None,
+    correct_answer=None
 ):
     # 1. Score explanation
-    scores = score_explanation(explanation, context)
+    scores = score_explanation(
+        explanation,
+        context,
+        student_answer,
+        correct_answer
+    )
 
     # 2. Compute improvement
     improvement = compute_improvement(prev_correctness, current_correctness)

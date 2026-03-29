@@ -45,7 +45,9 @@ Instruction:
         topic=topic,
         explanation_type=explanation_type,
         prev_correctness=prev_result,
-        current_correctness=current_result
+        current_correctness=current_result,
+        student_answer=user_answer,
+        correct_answer=correct_answer
     )
 
     print("Meta Result:", meta_result)

@@ -1,8 +1,19 @@
-from llm.client import call_llm
 from prompts.baseline import BASELINE_PROMPTS
 
 from src.meta.meta_engine import process_explanation
 from src.meta.strategy import get_best_strategy
+from src.rag.retriever import retrieve_context
+from src.rag.generator import generate_explanation_text
+
+
+def _style_to_meta_explanation_type(style: str) -> str:
+    if style == "definition":
+        return "simple"
+    if style == "step-by-step":
+        return "targeted"
+    if style == "analogy":
+        return "advanced"
+    return "targeted"
 
 
 def run_tier1(user_answer: str, correct_answer: str, topic: str = "general") -> str:
@@ -26,22 +37,31 @@ def run_tier1(user_answer: str, correct_answer: str, topic: str = "general") -> 
     best_style = get_best_strategy(topic)
     print("Chosen Strategy:", best_style)
 
-    explanation_type = best_style
+    explanation_type = _style_to_meta_explanation_type(best_style)
+    difficulty = 4 if is_correct else 2
 
-    # --- 3. Generate explanation ---
-    final_prompt = f"""
+    # --- 3. Retrieve context (RAG) ---
+    query = f"Topic: {topic}. Student answer: {user_answer}. Correct answer: {correct_answer}."
+    chunks = retrieve_context(topic=topic, query=query, top_k=4)
+
+    # --- 4. Generate explanation grounded in retrieved chunks ---
+    pedagogical_prompt = f"""
 Learner state: {learner_state}
 
 Instruction:
 {prompt}
 """
+    _, explanation = generate_explanation_text(
+        query=pedagogical_prompt,
+        difficulty=difficulty,
+        explanation_type=explanation_type,
+        chunks=chunks,
+    )
 
-    explanation = call_llm(final_prompt)
-
-    # --- 4. Meta processing ---
+    # --- 5. Meta processing ---
     meta_result = process_explanation(
         explanation=explanation,
-        context=correct_answer,
+        context="\n\n".join([chunk.get("text", "") for chunk in chunks]),
         topic=topic,
         explanation_type=explanation_type,
         prev_correctness=prev_result,

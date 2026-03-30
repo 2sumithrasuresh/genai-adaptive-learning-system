@@ -1,1 +1,6 @@
 streamlit
+fastapi
+uvicorn
+chromadb
+sentence-transformers
+pypdf

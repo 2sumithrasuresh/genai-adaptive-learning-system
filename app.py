@@ -22,7 +22,7 @@ st.write(question)
 user_answer = st.text_area("Your Answer")
 
 if st.button("Submit"):
-    explanation = run_tier1(user_answer, correct_answer)
+    explanation = run_tier1(user_answer, correct_answer, topic)
 
     st.write("### Generated Explanation")
     st.write(explanation)

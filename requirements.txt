@@ -4,3 +4,7 @@ uvicorn
 chromadb
 sentence-transformers
 pypdf
+groq
+python-dotenv
+mysql-connector-python
+httpx%

@@ -15,6 +15,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [questionCount, setQuestionCount] = useState(0);
+  const [explanation, setExplanation] = useState("");
 
   // Step 2: Generate a question
   async function fetchQuestion(diff) {
@@ -76,10 +77,18 @@ export default function App() {
       const actionRes = await fetch(`${API}/next-action`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ student_id: studentId, topic, evaluation_result: evalData })
-      });
+        body: JSON.stringify({
+            student_id: studentId,
+            topic,
+            question,
+            student_answer: studentAnswer,
+            expected_answer: expectedAnswer,
+            evaluation_result: evalData
+        })
+    });
       const action = await actionRes.json();
-      setDifficulty(action.next_difficulty);
+      setDifficulty(action.next_difficulty || 1);
+      setExplanation(action.explanation || "");
     } catch {
       setError("Something went wrong. Check the backend.");
     }
@@ -91,7 +100,7 @@ export default function App() {
     await fetchQuestion(difficulty);
   }
 
-  const masteryPercent = Math.round(mastery * 100);
+  const masteryPercent = Math.round((mastery || 0) * 100);
 
   const resultColor = {
     correct: "#22c55e",
@@ -241,6 +250,19 @@ export default function App() {
                       <p style={{ color: "#475569", fontSize: "0.85rem", marginTop: 6, marginBottom: 0 }}>
                         <strong>Expected:</strong> {expectedAnswer}
                       </p>
+                        {explanation && (
+  <div style={{
+    marginTop: "1rem",
+    padding: "1rem",
+    background: "#eff6ff",
+    borderRadius: 8,
+    fontSize: "0.9rem",
+    color: "#1e40af"
+  }}>
+    <strong>Explanation:</strong>
+    <p>{explanation}</p>
+  </div>
+)}
 
                       <button
                         onClick={handleNext}

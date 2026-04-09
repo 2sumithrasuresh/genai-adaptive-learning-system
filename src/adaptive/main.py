@@ -143,5 +143,50 @@ def next_action(req: NextActionRequest):
     if row is None:
         raise HTTPException(status_code=404, detail="Student not found")
 
+    import httpx
+
     result = get_next_action(row["difficulty_level"], req.evaluation_result.correctness)
-    return NextActionResponse(**result)
+
+    # Build query for explanation engine
+    query = f"""
+    Topic: {req.topic}
+
+    Question:
+    {req.question}
+
+    Correct Answer:
+    {req.expected_answer}
+
+    Student Answer:
+    {req.student_answer}
+
+    Evaluation:
+    - correctness: {req.evaluation_result.correctness}
+    - mistake_type: {req.evaluation_result.mistake_type}
+
+    Instruction:
+    Explain the correct concept clearly.
+    Focus on fixing the student's mistake.
+    Keep explanation aligned with the explanation_type.
+    """
+
+    try:
+        exp_resp = httpx.post(
+            "http://localhost:8001/generate-explanation",
+            json={
+                "topic": req.topic,
+                "query": query,
+                "difficulty": result["next_difficulty"],
+                "explanation_type": result["explanation_type"]
+            },
+            timeout=30.0
+        )
+        explanation = exp_resp.json().get("explanation", "")
+    except Exception as e:
+        explanation = f"Explanation error: {str(e)}"
+
+    return {
+        "next_difficulty": result["next_difficulty"],
+        "explanation_type": result["explanation_type"],
+        "explanation": explanation
+    }

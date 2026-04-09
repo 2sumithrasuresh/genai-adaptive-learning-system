@@ -40,6 +40,12 @@ class NextActionRequest(BaseModel):
     topic: str
     evaluation_result: EvaluateAnswerResponse
 
+    # ADD THESE
+    question: str
+    student_answer: str
+    expected_answer: str
+
 class NextActionResponse(BaseModel):
     next_difficulty: int
     explanation_type: str  # simple / targeted / advanced
+    explanation: str
